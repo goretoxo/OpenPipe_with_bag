@@ -45,9 +45,12 @@ unsigned long int drone_sample_length;
 sample_t* samples_table;
 char status;
 double T,P,p0,a;
-
+double Pinicial;
+double umbral;
+double debugmode;
 
 void setup(){
+  debugmode = 0;
   Serial.begin(9600);
   Serial.println("OpenPipe SAMPLES");
   OpenPipe.power(A2, A3); 
@@ -75,6 +78,38 @@ samples_table=INSTRUMENT;
     Serial.println("BMP180 init fail\n\n");
     while(1);
   }
+// LECTURA INICIAL DE LA PRESION
+  status = pressure.startTemperature();
+  if (status != 0)
+  {
+    delay(status);
+    status = pressure.getTemperature(T);
+    if (status != 0)
+    {
+      status = pressure.startPressure(3);
+      if (status != 0)
+      {
+        delay(status);
+        status = pressure.getPressure(P,T);
+        if (status != 0)
+        {
+//          Serial.print("absolute pressure: ");
+//          Serial.println(P,2);
+         Serial.print("Presion inicial:");
+         Serial.println(P,2);
+         Pinicial = P;
+        }
+        else Serial.println("error retrieving pressure measurement\n");
+      }
+      else Serial.println("error starting pressure measurement\n");
+    }
+    else Serial.println("error retrieving temperature measurement\n");
+  }
+  else Serial.println("error starting temperature measurement\n");
+  
+// -- LECTURA INICIAL DE LA PRESION
+
+
 }
 
 void loop(){
@@ -93,8 +128,10 @@ void loop(){
         status = pressure.getPressure(P,T);
         if (status != 0)
         {
-//          Serial.print("absolute pressure: ");
-//          Serial.println(P,2);
+//          if (debugmode==1){
+//            Serial.print("absolute pressure: ");
+//            Serial.println(P,2);
+//          }
         }
         else Serial.println("error retrieving pressure measurement\n");
       }
@@ -106,16 +143,37 @@ void loop(){
   
 // --PRESION
 
-  fingers=OpenPipe.readFingers();
 
+  fingers=OpenPipe.readFingers();
+  
+  
+// Posiciones de programacion
+// 1024 + 2048, para activar/desactivar el sensor de presion
+  if (fingers == 3072) { 
+    if (umbral ==0) {
+      umbral = 30;
+    } else {
+      umbral = -30;
+    }
+  }
+// 7168, para activar/desactivar debug mode
+  if (fingers == 7168) {
+    if (debugmode ==1) {
+      debugmode =0;
+    } else {
+      debugmode =1;
+    }
+  }
   if (fingers!=previous_fingers){
-//    Serial.println(fingers); 
+    if (debugmode == 1) {
+      Serial.println(fingers); 
+    }
 //    Serial.println(previous_fingers);
     previous_fingers=fingers;  
 //    OpenPipe.printFingers();
     // Check the low right thumb sensor
 //    if (OpenPipe.isON() and P>940) {      
-    if (P>940) {      
+    if (P>(Pinicial+umbral)) {      
       playing=1;
       note=dimeNota(fingers);
       sample=note_to_sample(note);
@@ -162,11 +220,13 @@ int dimeNota(int fingers){
     case 2175: return 83;
     case 2334: return 83;
     case 2366: return 84;
+    case 2362: return 84;
     case 2174: return 84;
     case 2364: return 84;
     case 2360: return 84;
     case 2358: return 84;
     case 2363: return 84;
+    case 2173: return 85;
     case 2172: return 86;
     case 2168: return 88;
     default: return 0xFF;
@@ -259,7 +319,7 @@ void Playback()
 ISR(TIMER1_COMPA_vect) {
   
   // STOP SOUND
-  if ((P<940)){
+  if ((P<(Pinicial+umbral))){
 //  if (!(OpenPipe.isON())){
     OCR2A=127;
     return;
