@@ -4,8 +4,8 @@
  *  Samples are defined in samples.h file, generated using the provided samples.py script
  *
  *  Connect the OpenPipe Breakout wires to Arduino as follows:
- *  YELLOW-> A5 (SCL)
- *  GREEN-> A4 (SDA)
+ *  GREEN-> A5 (SCL)
+ *  WHITE-> A4 (SDA)
  *  BLACK -> A3 (GND) (Grey in old openpipes)
  *  RED -> A2 (VCC) (White in old openpipes)
  *
@@ -21,14 +21,14 @@
 #include <OpenPipe.h> 
 #include "samples.h"
 #include <SFE_BMP180.h>
-#include <Wire.h>
+
 SFE_BMP180 pressure;
 #define ALTITUDE 800.0 
 
 
 #define GAITA_GALEGA
 
-// #define ENABLE_DRONE
+//#define ENABLE_DRONE
 
 #ifdef GAITA_GALEGA
   #define INSTRUMENT INSTRUMENT_GAITA_GALEGA
@@ -44,13 +44,16 @@ unsigned char sample_index, drone_index;
 unsigned long int drone_sample_length;
 sample_t* samples_table;
 char status;
+// medida de presion, temperatura, y demas del sensor
 double T,P,p0,a;
 double Pinicial;
+// umbral de fol presionado, deberia ser 20, approx.
 double umbral;
 double debugmode;
 
 void setup(){
-  debugmode = 0;
+  debugmode = 0;    // 1 debug activado, 0 desactivado
+  umbral = -30;       // umbral < 0, sin fol; umbral >0, con fol
   Serial.begin(9600);
   Serial.println("OpenPipe SAMPLES");
   OpenPipe.power(A2, A3); 
@@ -67,7 +70,7 @@ void setup(){
 samples_table=INSTRUMENT;
 #ifdef ENABLE_DRONE
 //  NOTA DEL RONCO
-  drone_sample=note_to_sample(60);
+  drone_sample=note_to_sample(48);
   drone_sample_length=samples_table[drone_sample].len;
 #endif
   Serial.println("setup ok");  
@@ -76,7 +79,7 @@ samples_table=INSTRUMENT;
   else
   {
     Serial.println("BMP180 init fail\n\n");
-    while(1);
+//    while(1);
   }
 // LECTURA INICIAL DE LA PRESION
   status = pressure.startTemperature();
@@ -99,13 +102,13 @@ samples_table=INSTRUMENT;
          Serial.println(P,2);
          Pinicial = P;
         }
-        else Serial.println("error retrieving pressure measurement\n");
+//        else Serial.println("error retrieving pressure measurement\n");
       }
-      else Serial.println("error starting pressure measurement\n");
+//      else Serial.println("error starting pressure measurement\n");
     }
-    else Serial.println("error retrieving temperature measurement\n");
+//    else Serial.println("error retrieving temperature measurement\n");
   }
-  else Serial.println("error starting temperature measurement\n");
+//  else Serial.println("error starting temperature measurement\n");
   
 // -- LECTURA INICIAL DE LA PRESION
 
@@ -133,13 +136,13 @@ void loop(){
 //            Serial.println(P,2);
 //          }
         }
-        else Serial.println("error retrieving pressure measurement\n");
+//        else Serial.println("error retrieving pressure measurement\n");
       }
-      else Serial.println("error starting pressure measurement\n");
+//      else Serial.println("error starting pressure measurement\n");
     }
-    else Serial.println("error retrieving temperature measurement\n");
+//    else Serial.println("error retrieving temperature measurement\n");
   }
-  else Serial.println("error starting temperature measurement\n");
+//  else Serial.println("error starting temperature measurement\n");
   
 // --PRESION
 
@@ -150,13 +153,13 @@ void loop(){
 // Posiciones de programacion
 // 1024 + 2048, para activar/desactivar el sensor de presion
   if (fingers == 3072) { 
-    if (umbral ==0) {
-      umbral = 30;
-    } else {
+    if (umbral >0) {
       umbral = -30;
+    } else {
+      umbral = 30;
     }
   }
-// 7168, para activar/desactivar debug mode
+// 7168, (tres pulsados) para activar/desactivar debug mode
   if (fingers == 7168) {
     if (debugmode ==1) {
       debugmode =0;
@@ -198,7 +201,8 @@ int dimeNota(int fingers){
 // fingerings sacadas de debugging de estado, con el toque pechado 
 
   switch(fingers) {
-    case 2431: return 71;
+    case 2431: return 71; 
+    case 2238: return 72;
     case 2430: return 72;
     case 2429: return 73;
     case 2428: return 74;
@@ -301,7 +305,7 @@ void startPlayback()
 }
 
 // stop PWM sound
-void Playback()
+void stopPlayback()
 {
   // Disable playback per-sample interrupt.
   TIMSK1 &= ~_BV(OCIE1A);
