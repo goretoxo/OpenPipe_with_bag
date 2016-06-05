@@ -32,12 +32,33 @@ SFE_BMP180 pressure;
 
 // seleccion de instrumento, para samples y digitacion en el codigo original
 #define GAITA_GALEGA
+//#define GAITA_ASTURIANA
+//#define UILLEANN  // le faltan notas
+//#define SACKPIPA    // le faltan notas
+//#define GHB         // le faltal notas
+//#define SINUSOIDS
 
 // #define ENABLE_DRONE
 
 #ifdef GAITA_GALEGA
   #define INSTRUMENT INSTRUMENT_GAITA_GALEGA
 #endif
+#ifdef GAITA_ASTURIANA
+  #define INSTRUMENT INSTRUMENT_GAITA_ASTURIANA
+#endif
+#ifdef UILLEANN
+  #define INSTRUMENT INSTRUMENT_UILLEANN
+#endif
+#ifdef SACKPIPA
+  #define INSTRUMENT INSTRUMENT_SACKPIPA
+#endif
+#ifdef GHB
+  #define INSTRUMENT INSTRUMENT_GHB
+#endif
+#ifdef SINUSOIDS
+  #define INSTRUMENT INSTRUMENT_SINUSOIDS
+#endif
+
 
 #define SAMPLE_RATE 44100
 
