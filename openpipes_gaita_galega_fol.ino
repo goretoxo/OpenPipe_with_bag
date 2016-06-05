@@ -18,17 +18,22 @@
  */
 
 #include <Wire.h> 
+// biblioteca de lectura del openpipe
 #include <OpenPipe.h> 
+//samples de gaita gallega
 #include "samples.h"
+
+// sensor de presion
 #include <SFE_BMP180.h>
 
+// variables para el sensor de presion
 SFE_BMP180 pressure;
 #define ALTITUDE 800.0 
 
-
+// seleccion de instrumento, para samples y digitacion en el codigo original
 #define GAITA_GALEGA
 
-//#define ENABLE_DRONE
+// #define ENABLE_DRONE
 
 #ifdef GAITA_GALEGA
   #define INSTRUMENT INSTRUMENT_GAITA_GALEGA
@@ -55,10 +60,11 @@ void setup(){
   debugmode = 0;    // 1 debug activado, 0 desactivado
   umbral = -30;       // umbral < 0, sin fol; umbral >0, con fol
   Serial.begin(9600);
-  Serial.println("OpenPipe SAMPLES");
+  Serial.println("OpenPipe iniciando");
   OpenPipe.power(A2, A3); 
+  Serial.println("openpipe.power ok");
   OpenPipe.config();
-  Serial.println("config ok");
+  Serial.println("openpipe config ok");
   pinMode(12,OUTPUT);
   digitalWrite(12, LOW);
   Serial.println("speaker ok");
