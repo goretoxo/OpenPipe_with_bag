@@ -26,7 +26,7 @@
 // sensor de presion
 #include <SFE_BMP180.h>
 
-// variables para el sensor de presion
+// variables para el sensor de presion. Experiments in the plateau
 SFE_BMP180 pressure;
 #define ALTITUDE 800.0 
 
